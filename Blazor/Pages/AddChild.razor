@@ -1,0 +1,44 @@
+﻿@page "/AddChild"
+@using Blazor.Models
+@using Blazor.Data
+@inject IChildService _childService
+@inject NavigationManager NavigationManager
+<h3>AddChild</h3>
+<EditForm Model="@newChild" OnValidSubmit="@AddNewChildAsync">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    <div class="form-group">
+        Name:<br/>
+        <InputText @bind-Value="newChild.Name"/>
+    </div>
+    <div class="form-group">
+        Age:<br/>
+        <InputNumber rows="4" @bind-Value="newChild.Age"/>
+    </div>
+    <div class="form-group">
+            Gender:<br/>
+            <InputText @bind-Value="newChild.Gender"/>
+        </div>
+    <p class="actions">
+        <button class="btn btn-outline-dark" type="submit">Create</button>
+    </p>
+</EditForm>
+    <a>@errorMessage</a>
+@code {
+    private Child newChild = new Child();
+    private string errorMessage = "";
+
+    private async Task AddNewChildAsync()
+    {
+        try
+        {
+            await _childService.AddChildAsync(newChild);
+
+            NavigationManager.NavigateTo("/viewdata");
+        }
+        catch (Exception e)
+        {
+            errorMessage =e.Message;
+        }
+    }
+}

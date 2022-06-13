@@ -1,0 +1,110 @@
+﻿@page "/ViewData"
+@using Blazor.Models
+@using Blazor.Data
+@inject IToyService _toyService
+@inject IChildService _childService
+<h3>ViewData</h3>
+<p> Search(Child's gender): <input type="text" @oninput="@((arg) => SearchChild(arg,null))" style="width:50px"/> </p>
+<p> Search(Title): <select @oninput="@((arg) => SearchChild(null,arg))"> <option value="All">All</option><option value="Favorites">Favorite Toys</option> <option value="Non-Favorites">Not Favorite Toys</option></select></p>
+
+@if (childrenToShow == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else if (!childrenToShow.Any())
+{
+    <p>
+        <em>No children are added. Please add some.</em>
+    </p>
+}
+else
+{
+    @foreach (Child child in childrenToShow)
+    {
+        <br/>
+        <a>@child.Name is @child.Age years old @child.Gender. Their Toys include: </a>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Toy Name</th>
+                <th>Color</th>
+                <th>IsFavourite</th>
+                <th>Remove</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (child.Toys != null && child.Toys.Any())
+            {
+                foreach (Toy toy in child.Toys)
+                {
+                    <tr>
+                        <td>@toy.Name</td>
+                        <td>@toy.Color</td>
+                        <td>@toy.IsFavourite</td>
+                        <td>
+                            <button @onclick="@(() => RemoveToy(toy.Id))">
+                                <i class="oi oi-trash" style="color:red"/>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <p>
+                    <em>@child.Name has no toys</em>
+                </p>
+            }
+            </tbody>
+        </table>
+    }
+}
+
+
+
+@code {
+    IList<Child> childrenToShow;
+    string ShowFavorites = "All";
+    string? search = null;
+    protected override async Task OnInitializedAsync()
+    {
+        childrenToShow = await _childService.GetChildrenAsync(null,null);
+    }
+
+    private async Task SearchChild(ChangeEventArgs? forGender,ChangeEventArgs? forFavorites)
+    {
+        Console.WriteLine(ShowFavorites);
+        if(forGender!=null){
+            search = forGender.Value.ToString();
+        }
+        if(forFavorites!=null){
+            ShowFavorites = forFavorites.Value.ToString();
+        }
+        if(ShowFavorites.Equals("All")){
+            childrenToShow = await _childService.GetChildrenAsync(search, null);
+        }
+        else
+        {
+            childrenToShow = await _childService.GetChildrenAsync(search, ShowFavorites);
+        }
+    }
+
+    private async Task RemoveToy(int toyId)
+    {
+        foreach (var child in childrenToShow)
+        {
+            if (child.Toys != null)
+            {
+                Toy toRemove = child.Toys.FirstOrDefault(t => t.Id == toyId);
+                if (toRemove != null)
+                {
+                    child.Toys.Remove(toRemove);
+                }
+            }
+        }
+        await _toyService.RemoveToy(toyId);
+    }
+
+}

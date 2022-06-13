@@ -1,0 +1,59 @@
+﻿@page "/AddToy"
+@using Blazor.Models
+@using Blazor.Data
+@inject IChildService _childService
+@inject IToyService _toyService
+@inject NavigationManager NavigationManager
+<h3>AddToy</h3>
+<EditForm Model="@newToy" OnValidSubmit="@AddNewToyToChild">
+    <DataAnnotationsValidator/> <ValidationSummary/>
+    <div class="form-group">
+        Child's Name + ID: <br/>
+        <select @bind="childId">
+            <option value="0">None</option>
+            @if (children != null)
+            {
+                @foreach (var child in children)
+                {
+                    <option value="@child.Id">
+                        @(child.Name + " ID:" + child.Id)
+                    </option>
+                }
+            }
+        </select>
+    </div>
+   
+        <div class="form-group"> Name:<br/> <InputText rows="4" @bind-Value="newToy.Name"/> </div>
+        <div class="form-group"> Color:<br/> <InputText rows="4" @bind-Value="newToy.Color"/> </div>
+    <div class="form-group"> Condition:<br/> <InputText rows="4" @bind-Value="newToy.Condition"/> </div>
+        <div class="form-group"> Is Favourite?:<br/> <InputCheckbox rows="4" @bind-Value="newToy.IsFavourite"/> </div>
+    <p class="actions">
+            <button class="btn btn-outline-dark" type="submit">Create</button>
+        </p>
+</EditForm>
+<a>@errorMessage</a>
+@code {
+    private IList<Child> children;
+    private Toy newToy = new Toy();
+    private string errorMessage = "";
+
+    private int childId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        children = await _childService.GetChildrenAsync(null,null);
+    }
+
+    private async Task AddNewToyToChild()
+    {
+        try
+        {
+            await _toyService.AddToyAsync(newToy, childId);
+            NavigationManager.NavigateTo("/viewdata");
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+        }
+    }
+}
